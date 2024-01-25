@@ -24,7 +24,7 @@ INFORMATION: tuple = (
     {
         'parameter': 'Tempo entre leituras',
         'standard_value': 500,
-        'unidade': 'ms',
+        'unidade': ' ms',
     },
 )
 
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     format_print(
         fill_char=' ',
         line_size=LINE_SIZE,
-        text=f' > Tempo total de execução = {tempo} s.'
+        text=f' > Tempo total de execução = {tempo}.'
     )
 
     filename = (
