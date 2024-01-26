@@ -2,7 +2,6 @@ from textwrap import wrap
 from time import sleep
 from tkinter import filedialog
 
-
 LINE_SIZE = 96
 
 
@@ -73,10 +72,9 @@ def header_and_footer(option: bool = False) -> None:
 
 
 def select_path(p_text: str, p_read_file: bool) -> str:
-    _division(number=1)
     format_print(fill_char=' ', line_size=LINE_SIZE, text=p_text)
     path: str = ''
-    sleep(1.5)
+    sleep(1.25)
 
     while True:
         if p_read_file:
@@ -100,6 +98,6 @@ def select_path(p_text: str, p_read_file: bool) -> str:
             text=f'Diretório selecionado "{path.replace("/", "\\")}"',
         )
 
-    sleep(1.5)
+    sleep(0.75)
 
     return path

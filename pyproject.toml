@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "comunicacaomodbus"
+version = "0.1.0"
+description = "Programa configurável para testar comunicação modbus TCP"
+authors = ["Jonas Ferreira da Silva"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pymodbus = "^3.6.3"
+
+
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.8.0"
+blue = "^0.9.1"
+isort = "^5.13.2"
+types-pyinstaller = "^6.3.0.20240106"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
