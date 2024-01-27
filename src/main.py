@@ -4,7 +4,15 @@ from time import sleep, time
 from pymodbus.client.tcp import Any, Framer, ModbusTcpClient
 
 from default_setting import INFORMATION
-from functions import LINE_SIZE, format_print, header_and_footer, select_path
+from functions import (
+    LINE_SIZE,
+    division,
+    format_filename,
+    format_print,
+    format_value,
+    header_and_footer,
+    select_path,
+)
 
 
 def _config(p_parameter: int, p_use_standard: bool) -> int | str:
@@ -40,17 +48,6 @@ def _config(p_parameter: int, p_use_standard: bool) -> int | str:
     return _value
 
 
-def _preencher_direita(p_data: str, p_number: int, p_character: str) -> str:
-    if len(p_data) < p_number:
-        p_data = _preencher_direita(
-            p_data=f'{p_data}{p_character}',
-            p_number=p_number,
-            p_character=p_character,
-        )
-
-    return p_data
-
-
 if __name__ == '__main__':
     # Cabeçalho
     header_and_footer(option=False)
@@ -77,7 +74,7 @@ if __name__ == '__main__':
 
         if valor in 'SN':
             use_standard = valor == 'N'
-            format_print(fill_char='-', line_size=LINE_SIZE, text='')
+            division(number=1)
             break
 
         else:
@@ -90,13 +87,16 @@ if __name__ == '__main__':
     device_address: str = str(
         _config(p_parameter=0, p_use_standard=use_standard)
     )
+
     port: int = int(_config(p_parameter=1, p_use_standard=use_standard))
     timeout = _config(p_parameter=2, p_use_standard=use_standard)
     retry = _config(p_parameter=3, p_use_standard=use_standard)
     slave: int = int(_config(p_parameter=4, p_use_standard=use_standard))
+
     start_address: int = int(
         _config(p_parameter=5, p_use_standard=use_standard)
     )
+
     count: int = int(_config(p_parameter=6, p_use_standard=use_standard))
     numero_leituras: int = int(
         _config(p_parameter=7, p_use_standard=use_standard)
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     )
 
     if valor == 'S':
-        format_print(fill_char='-', line_size=LINE_SIZE, text='')
+        division(number=1)
 
     while True:
         valor = (
@@ -140,7 +140,7 @@ if __name__ == '__main__':
             + 'log.csv'
         )
 
-    format_print(fill_char='-', line_size=LINE_SIZE, text='')
+    division(number=1)
 
     sleep(0.5)
 
@@ -181,9 +181,10 @@ if __name__ == '__main__':
 
     inicio_geral: float = time()
 
-    while i < numero_leituras:
+    for i in range(numero_leituras):
+        inicio = time()
+
         try:
-            inicio = time()
             registers = client.read_holding_registers(
                 start_address, count, slave
             )
@@ -193,16 +194,8 @@ if __name__ == '__main__':
 
         # Process and print the retrieved data
         atual = float(f'{(time() - inicio):.3f}')
-
-        _split: list = str(atual).split('.')
-        _split[1] = _preencher_direita(
-            p_data=_split[1], p_number=3, p_character='0'
-        )
-        _atual: str = f'{_split[0]},{_split[1]}'
-
-        if i == 0:
-            menor = atual
-            maior = atual
+        _adjust: float = time()
+        _atual: str = format_value(p_value=atual)
 
         if registers.isError():
             format_print(
@@ -234,22 +227,27 @@ if __name__ == '__main__':
             if log:
                 export_data.append(f'Leitura ok;{_atual};{text}\n')
 
-            if atual < menor:
+            if menor == 0 and maior == 0:
                 menor = atual
-
-            if atual > maior:
                 maior = atual
 
-        if atual <= acquisition_time:
-            sleep(acquisition_time - atual)
+            if menor > atual:
+                menor = atual
 
-        i += 1
+            if maior < atual:
+                maior = atual
 
-    client.close()
+        _adjust = time() - _adjust
 
-    tempo = datetime.fromtimestamp((time() - inicio_geral), UTC).strftime(
+        if acquisition_time > atual + _adjust:
+            _sleep: float = acquisition_time - (atual + _adjust)
+            sleep(_sleep)
+
+    tempo: str = datetime.fromtimestamp((time() - inicio_geral), UTC).strftime(
         '%H:%M:%S'
     )
+
+    client.close()
 
     format_print(
         fill_char=' ', line_size=LINE_SIZE, text='...finalizando leitura'
@@ -257,7 +255,7 @@ if __name__ == '__main__':
 
     sleep(1.5)
 
-    format_print(fill_char='-', line_size=LINE_SIZE, text='')
+    division(number=1)
 
     format_print(
         fill_char=' ', line_size=LINE_SIZE, text=f' > Total de leituras = {i};'
@@ -283,11 +281,7 @@ if __name__ == '__main__':
         ),
     )
 
-    _split = str(menor).split('.')
-    _split[1] = _preencher_direita(
-        p_data=_split[1], p_number=3, p_character='0'
-    )
-    _menor: str = f'{_split[0]},{_split[1]}'
+    _menor: str = format_value(p_value=menor)
 
     format_print(
         fill_char=' ',
@@ -295,11 +289,7 @@ if __name__ == '__main__':
         text=f' > Menor tempo de leitura {_menor} s.',
     )
 
-    _split = str(maior).split('.')
-    _split[1] = _preencher_direita(
-        p_data=_split[1], p_number=3, p_character='0'
-    )
-    _maior: str = f'{_split[0]},{_split[1]}'
+    _maior: str = format_value(p_value=maior)
 
     format_print(
         fill_char=' ',
@@ -314,15 +304,12 @@ if __name__ == '__main__':
     )
 
     if log:
-        _split = filename.split('.')
-        filename = (
-            _split[0] + datetime.now().strftime('_%Y-%m-%d_%H-%M.') + _split[1]
-        )
+        filename = format_filename(p_filename=filename)
 
         with open(filename, 'w', encoding='utf-8') as file:
             file.write(''.join(export_data))
 
-        format_print(fill_char='-', line_size=LINE_SIZE, text='')
+        division(number=1)
 
         format_print(
             fill_char=' ',

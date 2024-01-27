@@ -1,3 +1,4 @@
+from datetime import datetime
 from textwrap import wrap
 from time import sleep
 from tkinter import filedialog
@@ -5,7 +6,18 @@ from tkinter import filedialog
 LINE_SIZE = 96
 
 
-def _division(number: int = 1) -> None:
+def _preencher_direita(p_data: str, p_number: int, p_character: str) -> str:
+    if len(p_data) < p_number:
+        p_data = _preencher_direita(
+            p_data=f'{p_data}{p_character}',
+            p_number=p_number,
+            p_character=p_character,
+        )
+
+    return p_data
+
+
+def division(number: int = 1) -> None:
     for value in range(number):
         format_print(fill_char='-', line_size=LINE_SIZE, text='')
 
@@ -38,6 +50,19 @@ def format_print(
         del new_text
 
 
+def format_filename(p_filename: str) -> str:
+    _split = p_filename.split('.')
+    return _split[0] + datetime.now().strftime('_%Y-%m-%d_%H-%M.') + _split[1]
+
+
+def format_value(p_value: float) -> str:
+    _split = str(p_value).split('.')
+    _split[1] = _preencher_direita(
+        p_data=_split[1], p_number=3, p_character='0'
+    )
+    return f'{_split[0]},{_split[1]}'
+
+
 def header_and_footer(option: bool = False) -> None:
     texts = [
         '>>> PROGBIN AUTOMAÇÃO INDUSTRIAL LTDA <<<',
@@ -52,11 +77,11 @@ def header_and_footer(option: bool = False) -> None:
         ]
 
     for number, text in enumerate(texts):
-        _division(number=1)
+        division(number=1)
         text = text.center(LINE_SIZE, ' ')
         format_print(fill_char=' ', line_size=LINE_SIZE, text=text)
 
-    _division(number=1)
+    division(number=1)
 
     if option:
         input()
