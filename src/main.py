@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     sleep(0.5)
 
-    text: str = 'Communication;Time (s);Observation'
+    text: str = 'Timestamp;Communication;Time (s);Observation'
     for j in range(count):
         text += f';R{start_address + j}'
 
@@ -183,6 +183,7 @@ if __name__ == '__main__':
 
     for i in range(numero_leituras):
         inicio = time()
+        timestamp = datetime.now().strftime('%d/%m/%Y - %H:%M:%S.%f')
 
         try:
             registers = client.read_holding_registers(
@@ -201,12 +202,14 @@ if __name__ == '__main__':
             format_print(
                 fill_char=' ',
                 line_size=LINE_SIZE,
-                text=f' Leitura modbus {i + 1} falha (resposta em {_atual} s)',
+                text=f' {timestamp} - Leitura modbus '
+                     f'{i + 1} falha (resposta em {_atual} s)',
             )
 
             if log:
                 export_data.append(
-                    f'Falha na leitura;{_atual};{registers.message}\n'
+                    f'{timestamp};Falha na leitura;'
+                    f'{_atual};{registers.message}\n'
                 )
 
         else:
@@ -216,7 +219,8 @@ if __name__ == '__main__':
             format_print(
                 fill_char=' ',
                 line_size=LINE_SIZE,
-                text=f' Leitura modbus {i + 1} ok (resposta em {_atual} s)',
+                text=f' {timestamp} - Leitura modbus '
+                     f'{i + 1} ok (resposta em {_atual} s)',
             )
 
             text = ''
@@ -225,7 +229,9 @@ if __name__ == '__main__':
                 text += f';{d}'
 
             if log:
-                export_data.append(f'Leitura ok;{_atual};{text}\n')
+                export_data.append(
+                    f'{timestamp};Leitura ok;{_atual};{text}\n'
+                )
 
             if menor == 0 and maior == 0:
                 menor = atual
@@ -254,6 +260,7 @@ if __name__ == '__main__':
     )
 
     sleep(1.5)
+    i += 1
 
     division(number=1)
 
